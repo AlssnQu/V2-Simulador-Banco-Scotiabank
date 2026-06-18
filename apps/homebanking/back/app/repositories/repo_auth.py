@@ -8,7 +8,6 @@ from sqlalchemy.engine import Connection
 
 MAX_INTENTOS = 5
 
-
 def buscar_usuario_por_username(conn: Connection, username: str) -> dict | None:
     """Busca el usuario (case-insensitive) y une dcliente para nombre/codcliente."""
     sql = text(

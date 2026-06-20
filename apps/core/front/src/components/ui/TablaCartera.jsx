@@ -38,7 +38,9 @@ export default function TablaCartera({ cartera = [] }) {
             <td className="num">{money(c.montosaldocapital)}</td>
             <td className="num">{money(c.car_vig_capital)}</td>
             <td className="num">{money(c.car_ven_capital)}</td>
-            <td className="num">{num(c.diasatrasocredito)}</td>
+            <td className="num" style={{ color: c.diasatrasocredito > 30 ? '#D11218' : c.diasatrasocredito > 0 ? '#d97706' : 'inherit', fontWeight: c.diasatrasocredito > 0 ? 700 : 400 }}>
+              {num(c.diasatrasocredito)}
+            </td>
             <td>
               <Semaforo
                 estado={

@@ -58,3 +58,14 @@ def registrar_login_fallido(conn: Connection, pkusuario: int) -> int:
     ).scalar()
     conn.commit()
     return nuevos
+
+def verificar_dni_cliente(conn: Connection, pkcliente: int, dni: str) -> bool:
+    """Verifica que el DNI ingresado coincide con el registrado en dcliente."""
+    sql = text("""
+        SELECT 1 FROM dcliente
+        WHERE pkcliente = :pk
+          AND TRIM(numerodocumentoidentidad) = TRIM(:dni)
+        LIMIT 1
+    """)
+    row = conn.execute(sql, {"pk": pkcliente, "dni": dni}).first()
+    return row is not None 

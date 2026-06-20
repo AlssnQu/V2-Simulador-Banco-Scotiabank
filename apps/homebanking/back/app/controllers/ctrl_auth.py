@@ -6,8 +6,7 @@ from app.core.cfg_config import settings
 from app.core.cfg_security import crear_access_token, verificar_password
 from app.repositories import repo_auth
 
-
-def login(conn: Connection, username: str, password: str) -> dict:
+def login(conn: Connection, username: str, password: str, dni: str) -> dict:
     usuario = repo_auth.buscar_usuario_por_username(conn, username)
     if usuario is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
@@ -32,6 +31,14 @@ def login(conn: Connection, username: str, password: str) -> dict:
 
     # Login exitoso
     repo_auth.registrar_login_exitoso(conn, usuario["pkusuario"])
+
+    # Verificar DNI como segundo factor
+    from app.repositories.repo_auth import verificar_dni_cliente
+    if not verificar_dni_cliente(conn, usuario["pkcliente"], dni):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="DNI no coincide con el titular de la cuenta."
+        )
 
     token = crear_access_token(
         {

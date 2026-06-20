@@ -11,4 +11,4 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login", response_model=LoginResponse)
 def login(body: LoginRequest, conn: Connection = Depends(get_db)):
-    return ctrl_auth.login(conn, body.username, body.password)
+    return ctrl_auth.login(conn, body.username, body.password, body.dni)

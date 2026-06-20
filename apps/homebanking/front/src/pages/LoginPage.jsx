@@ -45,8 +45,8 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      // El backend autentica con la tarjeta/usuario (codcliente) + la clave.
-      await login(tarjeta.trim(), password)
+      // El backend autentica con la tarjeta/usuario (codcliente) + la clave + dni (verificación adicional)
+      await login(tarjeta.trim(), password, dni)
       navigate('/inicio', { replace: true })
     } catch (err) {
       setError(extractError(err, 'No se pudo iniciar sesión.'))

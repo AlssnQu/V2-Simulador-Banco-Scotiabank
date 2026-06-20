@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class LoginRequest(BaseModel):
     username: str = Field(..., examples=["cli000002"])
     password: str = Field(..., examples=["demo1234"])
-
+    dni: str = Field(..., min_length=8, max_length=12, examples=["11200001"]) 
 
 class ClienteInfo(BaseModel):
     codcliente: str

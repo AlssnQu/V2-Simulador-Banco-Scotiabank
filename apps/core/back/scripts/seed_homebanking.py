@@ -20,7 +20,6 @@ import bcrypt                                  # noqa: E402
 from sqlalchemy import create_engine, text   # noqa: E402
 from app.core.cfg_config import settings     # noqa: E402
 
-
 def hash_password(p: str) -> str:
     """Hash bcrypt directo (evita el bug passlib<->bcrypt). Demo."""
     return bcrypt.hashpw(p.encode()[:72], bcrypt.gensalt()).decode()
@@ -44,7 +43,6 @@ def _catalogos(c):
         "cond_norm": pk("dcondicioncontable", "codcondicioncontable", "01"),
     }
 
-
 def crear_usuarios(c):
     """Un usuario de homebanking por cada cliente con crédito (idempotente)."""
     n = c.execute(text("""
@@ -58,7 +56,6 @@ def crear_usuarios(c):
         WHERE NOT EXISTS (SELECT 1 FROM usuarios_homebanking u WHERE u.pkcliente = cc.pkcliente)
     """), {"hash": hash_password("demo1234")})
     return n.rowcount
-
 
 def generar_operaciones(c, cat):
     """
@@ -113,7 +110,6 @@ def generar_operaciones(c, cat):
     """), cat)
 
     return desem.rowcount, pagos_cap.rowcount
-
 
 def main():
     e = create_engine(settings.DATABASE_URL)

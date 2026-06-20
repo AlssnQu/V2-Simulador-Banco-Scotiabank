@@ -1,3 +1,6 @@
+import { useMovimientos } from '../hooks/useMovimientos.js'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { format } from '../utils/format.js'
 import { useNavigate } from 'react-router-dom'
 import {
   Wallet, CreditCard, Send, Receipt, FileText, FilePlus2,
@@ -29,6 +32,20 @@ export default function HomePage() {
     { icon: FileText, label: 'Pago de servicios', to: '/operaciones/pago-servicios' },
     { icon: FilePlus2, label: 'Solicitar préstamo', to: '/creditos/solicitar' },
   ]
+
+    // Tomamos la primera cuenta de ahorro para el gráfico de movimientos
+  const primeraCuenta = cuentas[0]?.codcuentaahorro ?? null
+  const { movimientos, loading: lm } = useMovimientos(primeraCuenta, 20)
+
+  // Agrupamos por mes para el gráfico (sumamos montooperacion por mes)
+  const movPorMes = movimientos.reduce((acc, m) => {
+    const mes = m.fechahoraoperacion?.slice(0, 7) ?? 'Sin fecha'
+    const prev = acc.find((x) => x.mes === mes)
+    const monto = parseFloat(m.montooperacion ?? 0)
+    if (prev) prev.monto += monto
+    else acc.push({ mes, monto: monto })
+    return acc
+  }, []).slice(-6) // últimos 6 meses
 
   return (
     <PageLayout aside={<ActionPanel title="Operaciones frecuentes" items={acciones} />}>
@@ -115,6 +132,46 @@ export default function HomePage() {
           </ul>
         )}
       </Card>
+
+      {/* Gráfico de movimientos recientes */}
+      {primeraCuenta && (
+        <Card title="Movimientos recientes" icon={<TrendingUp size={18} />}>
+          {lm ? <Loader text="Cargando movimientos…" /> : movimientos.length === 0 ? (
+            <p className="bbva-empty">Sin movimientos registrados.</p>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={movPorMes} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `S/${(v/1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(v) => [`S/ ${v.toFixed(2)}`, 'Monto']} />
+                  <Bar dataKey="monto" radius={[4, 4, 0, 0]}>
+                    {movPorMes.map((_, i) => (
+                      <Cell key={i} fill={i === movPorMes.length - 1 ? '#D11218' : '#f3a0a3'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <ul className="bbva-prodlist" style={{ marginTop: 12 }}>
+                {movimientos.slice(0, 5).map((m, i) => (
+                  <li key={i}>
+                    <div className="bbva-prod-info">
+                      <strong>{m.desconceptooperacion ?? m.codconceptooperacion ?? '—'}</strong>
+                      <small>{m.fechahoraoperacion?.slice(0, 10)}</small>
+                    </div>
+                    <div className="bbva-prod-amt">
+                      <span style={{ color: m.codtipoegresoingreso === 'E' ? '#D11218' : '#16a34a', fontWeight: 700 }}>
+                        {m.codtipoegresoingreso === 'E' ? '−' : '+'}S/ {parseFloat(m.montooperacion ?? 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </Card>
+      )}    
+
     </PageLayout>
   )
 }

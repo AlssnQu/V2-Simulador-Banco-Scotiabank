@@ -49,18 +49,18 @@ const ACTIVIDADES = [
 const COLORES = ['#D11218', '#f3a0a3']
 const SOL_COLOR = '#D11218'
 
-/* ── Helper: cuota mensual francesa ─────────────────────── */
-function calcularCuota(monto, tasaAnual, meses) {
+function calcularCuota(monto, teaAnual, meses) {
   if (!monto || !meses) return 0
-  const r = tasaAnual / 100 / 12
+  const tea = teaAnual / 100
+  const r = Math.pow(1 + tea, 1 / 12) - 1   // tasa efectiva mensual derivada de la TEA
   if (r === 0) return monto / meses
   return (monto * r * Math.pow(1 + r, meses)) / (Math.pow(1 + r, meses) - 1)
 }
 
-/* ── Helper: tabla de amortización completa ─────────────── */
-function generarTabla(monto, tasaAnual, meses) {
-  const r = tasaAnual / 100 / 12
-  const cuota = calcularCuota(monto, tasaAnual, meses)
+function generarTabla(monto, teaAnual, meses) {
+  const tea = teaAnual / 100
+  const r = Math.pow(1 + tea, 1 / 12) - 1
+  const cuota = calcularCuota(monto, teaAnual, meses)
   let saldo = monto
   return Array.from({ length: meses }, (_, i) => {
     const interes = saldo * r
@@ -278,7 +278,7 @@ export default function SolicitarCreditoPage() {
                 </select>
               </div>
               <div className="hb-field">
-                <label>Tasa de interés anual</label>
+                <label>Tasa Efectiva Anual (TEA)</label>
                 <select className="hb-select" value={tasa}
                   onChange={(e) => setTasa(Number(e.target.value))}>
                   {TASAS.map((t) => <option key={t.val} value={t.val}>{t.label}</option>)}

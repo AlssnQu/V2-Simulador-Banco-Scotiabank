@@ -1,6 +1,5 @@
 import { useMovimientos } from '../hooks/useMovimientos.js'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import { format } from '../utils/format.js'
 import { useNavigate } from 'react-router-dom'
 import {
   Wallet, CreditCard, Send, Receipt, FileText, FilePlus2,

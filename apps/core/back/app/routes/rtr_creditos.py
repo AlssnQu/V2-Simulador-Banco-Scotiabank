@@ -124,15 +124,23 @@ def resolver(
         raise HTTPException(status_code=400, detail=res["error"])
     return res
 
-
+#Para que el cronograma considere la TEA del tarifario, se debe pasar el parámetro tea.
 @router.get("/solicitudes/{codsolicitud}/cronograma")
 def cronograma_solicitud(
     codsolicitud: str,
+    tea: Optional[float] = Query(None, description="TEA del tarifario a aplicar (ej. 43.92)."),
+    #El parámetro fecha_desembolso es opcional y si no se pasa, se toma la fecha de desembolso de la solicitud.
+    fecha_desembolso: Optional[str] = Query(None, description="yyyy-mm-dd"),
+    #El parámetro dia_pago es opcional y si no se pasa, se toma el día de pago de la solicitud.
+    dia_pago: Optional[int] = Query(None, ge=1, le=28), 
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
     """Actividad 45: plan de pagos referencial."""
-    res = ctl_creditos.generar_cronograma(db, codsolicitud)
+    res = ctl_creditos.generar_cronograma(
+        db, codsolicitud, tea_aplicada=tea,
+        fecha_desembolso=fecha_desembolso, dia_pago=dia_pago,
+    )
     if res.get("error"):
         raise HTTPException(status_code=400, detail=res["error"])
     return res

@@ -11,6 +11,9 @@ from app.controllers import ctl_scoring
 from app.repositories import rep_clientes, rep_solicitudes as repsol, rep_evaluacion
 from app.services import svc_elegibilidad, svc_rds
 
+from datetime import date #para fecha de desembolso y día de pago
+import calendar
+
 # Umbrales del Reglamento de Créditos V33 (Art. 34, 32, 29.i), en Soles
 UMBRAL_OPINION_ADMIN   = 100_000   # Art. 29.i / 34: >= requiere opinión Administrador + Riesgos
 UMBRAL_OPINION_JEFEREG = 300_000   # Art. 32: >= requiere opinión Jefe de Negocios Regional (Formato 04)
@@ -258,10 +261,17 @@ def desembolsar(db: Session, codsolicitud: str) -> dict:
     return {"codsolicitud": codsolicitud, "estado": "Desembolsado", **res}
 
 
-def generar_cronograma(db: Session, codsolicitud: str) -> dict:
+def generar_cronograma(db: Session, codsolicitud: str,
+                       tea_aplicada: float | None = None,
+                       fecha_desembolso: str | None = None,
+                       dia_pago: int | None = None) -> dict:
     """
-    Actividad 45: plan de pagos referencial (cuota fija francesa) a partir
-    del monto aprobado y la TEA sugerida por el scoring del tipo de crédito.
+    Actividad 45: plan de pagos (cuota fija francesa) a partir del monto
+    aprobado. Por defecto usa la TEA "mid" sugerida por el scoring, pero el
+    asesor puede aplicar la TEA exacta del tarifario vigente (p.ej. Crédito
+    Empresarial Micro Micro: 40.92% con seguro de desgravamen / 43.92% sin
+    seguro) pasando `tea_aplicada`. Si además se indican `fecha_desembolso`
+    (yyyy-mm-dd) y `dia_pago` (1-28), calcula la fecha real de cada cuota.
     """
     sol = repsol.obtener(db, codsolicitud)
     if not sol:
@@ -271,11 +281,29 @@ def generar_cronograma(db: Session, codsolicitud: str) -> dict:
 
     monto = float(sol.montoaprobadocredito or sol.montosolicitudcredito or 0)
     plazo = int(sol.plazosolicitudcredito or sol.nrocuotasolicitud or 12)
-    tea = ctl_scoring.TEA_POR_TIPO.get(
-        (sol.codtiposolicitud or "CO"), {"mid": 40.0}
-    )["mid"]
+
+    if tea_aplicada is not None:
+        tea = float(tea_aplicada)
+    else:
+        tea = ctl_scoring.TEA_POR_TIPO.get(
+            (sol.codtiposolicitud or "CO"), {"mid": 40.0}
+        )["mid"]
+
     tem = (1 + tea / 100) ** (1 / 12) - 1
     cuota = monto * tem * (1 + tem) ** plazo / ((1 + tem) ** plazo - 1) if tem > 0 else monto / plazo
+
+    fechas = None
+    if fecha_desembolso and dia_pago:
+        f0 = date.fromisoformat(fecha_desembolso)
+        fechas = []
+        anio, mes = f0.year, f0.month
+        for _ in range(plazo):
+            mes += 1
+            if mes > 12:
+                mes -= 12
+                anio += 1
+            ultimo_dia = calendar.monthrange(anio, mes)[1]
+            fechas.append(date(anio, mes, min(dia_pago, ultimo_dia)))
 
     saldo = monto
     cuotas = []
@@ -283,19 +311,13 @@ def generar_cronograma(db: Session, codsolicitud: str) -> dict:
         interes = saldo * tem
         capital = cuota - interes
         saldo = max(0.0, saldo - capital)
-        cuotas.append({
-            "nrocuota": n,
-            "cuota": round(cuota, 2),
-            "capital": round(capital, 2),
-            "interes": round(interes, 2),
-            "saldo": round(saldo, 2),
-        })
+        fila = {"nrocuota": n, "cuota": round(cuota, 2), "capital": round(capital, 2),
+                "interes": round(interes, 2), "saldo": round(saldo, 2)}
+        if fechas:
+            fila["fecha"] = fechas[n - 1].isoformat()
+        cuotas.append(fila)
 
     return {
-        "codsolicitud": codsolicitud,
-        "monto": round(monto, 2),
-        "plazo_meses": plazo,
-        "tea": tea,
-        "cuota_referencial": round(cuota, 2),
-        "cronograma": cuotas,
+        "codsolicitud": codsolicitud, "monto": round(monto, 2), "plazo_meses": plazo,
+        "tea": tea, "cuota_referencial": round(cuota, 2), "cronograma": cuotas,
     }

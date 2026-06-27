@@ -87,10 +87,15 @@ export async function resolverSolicitud(codsolicitud, body) {
 /**
  * GET /creditos/solicitudes/{cod}/cronograma  (solo si está aprobada)
  */
-export async function getCronogramaSolicitud(codsolicitud) {
+export async function getCronogramaSolicitud(codsolicitud, opciones = {}) {
+  const { tea, fecha_desembolso, dia_pago } = opciones
   const { data } = await api.get(
     `/creditos/solicitudes/${codsolicitud}/cronograma`,
+    { params: { tea, fecha_desembolso, dia_pago } },
   )
+  //Cambio: Si no se pasa tea, se toma la TEA del tarifario de la solicitud. 
+  // Si no se pasa fecha_desembolso, se toma la fecha de desembolso de la solicitud. 
+  // Si no se pasa dia_pago, se toma el día de pago de la solicitud.
   return data
 }
 

@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-
 def get_cartera_asesor(db: Session, pkasesor: int, periodomes: int = 202512):
     """Cartera activa de un asesor desde FAGCUENTACREDITO."""
     sql = text("""

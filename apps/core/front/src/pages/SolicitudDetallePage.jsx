@@ -127,6 +127,9 @@ export default function SolicitudDetallePage() {
   const [decision, setDecision] = useState('APROBADO')
   const [motivo, setMotivo] = useState('')
   const [montoAprobado, setMontoAprobado] = useState('')
+  const [teaAplicada, setTeaAplicada] = useState('')
+  const [fechaDesembolso, setFechaDesembolso] = useState('')
+  const [diaPago, setDiaPago] = useState('')
 
   if (loading) {
     return <div className="card"><Loader texto="Cargando solicitud…" /></div>
@@ -275,9 +278,52 @@ export default function SolicitudDetallePage() {
           {aprobada && (
             <>
               <h4 style={{ marginTop: 0 }}>Cronograma referencial</h4>
-              <button className="btn btn--ghost" disabled={accionLoading} onClick={cargarCronograma}>
+
+              <div className="form-grid" style={{ marginBottom: 12 }}>
+                <div className="field">
+                  <label>TEA aplicada (%) — tarifario</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="Ej. 43.92"
+                    value={teaAplicada} 
+                    onChange={(e) => setTeaAplicada(e.target.value)} 
+                  />
+                </div>
+                <div className="field">
+                  <label>Fecha de desembolso</label>
+                  <input 
+                    type="date" 
+                    value={fechaDesembolso} 
+                    onChange={(e) => setFechaDesembolso(e.target.value)} 
+                  />
+                </div>
+                <div className="field">
+                  <label>Día de pago mensual</label>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    max="28" 
+                    placeholder="Ej. 3"
+                    value={diaPago} 
+                    onChange={(e) => setDiaPago(e.target.value)} 
+                  />
+                </div>
+              </div>
+
+              {/* BOTÓN ACTUALIZADO CON PARÁMETROS */}
+              <button 
+                className="btn btn--ghost" 
+                disabled={accionLoading} 
+                onClick={() => cargarCronograma({
+                  tea: teaAplicada || undefined,
+                  fecha_desembolso: fechaDesembolso || undefined,
+                  dia_pago: diaPago || undefined,
+                })}
+              >
                 Generar cronograma
               </button>
+
               {cronogramaError && <div className="alert alert--error">{cronogramaError}</div>}
               {cronograma && (
                 <>
@@ -320,7 +366,7 @@ export default function SolicitudDetallePage() {
 function CronogramaSolicitud({ cuotas = [] }) {
   const filas = cuotas.map((c) => ({
     nrocuota: c.nrocuota,
-    fechavencimientopagocuota: '—',
+    fechavencimientopagocuota: c.fecha ?? '—',
     montocapitalprogramado: c.capital,
     montointeresprogramado: c.interes,
     montocuota: c.cuota,

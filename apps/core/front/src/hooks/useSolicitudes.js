@@ -226,11 +226,13 @@ export function useSolicitud(codsolicitud) {
       (r) => `Desembolsado: ${r.codcuentacredito} por S/ ${r.monto_desembolsado}.`,
     )
 
-  async function cargarCronograma() {
+  //Cambio: Se agregan los parámetros tea, fecha_desembolso y dia_pago 
+  // para que el cronograma considere la TEA del tarifario, la fecha de desembolso y el día de pago de la solicitud.
+  async function cargarCronograma(opciones) {
     setCronograma(null)
     setCronogramaError(null)
     try {
-      setCronograma(await getCronogramaSolicitud(codsolicitud))
+      setCronograma(await getCronogramaSolicitud(codsolicitud, opciones))
     } catch (err) {
       setCronogramaError(detalleError(err, 'No se pudo generar el cronograma.'))
     }

@@ -362,7 +362,7 @@ export default function HomePage() {
       </div>
 
       <footer className="home-footer-bar">
-        <span>© 2026 Banco Andino · Core Financiero — Sistema interno</span>
+        <span>© 2026 Scotiabank · Core Financiero — Sistema interno</span>
         <span>
           <a href="#terminos">Términos</a> · <a href="#privacidad">Privacidad</a> ·{' '}
           <a href="#soporte">Soporte</a>

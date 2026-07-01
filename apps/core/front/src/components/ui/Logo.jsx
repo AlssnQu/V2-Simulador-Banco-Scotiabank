@@ -19,7 +19,7 @@ export default function Logo({ size = 44, wordmark = true, variant = "dark" }) {
         height={size}
         viewBox="9.203 9.216 493.594 493.568"
         xmlns="http://www.w3.org/2000/svg"
-        aria-label="Banco Andino"
+        aria-label="Scotiabank"
         role="img"
       >
         <path

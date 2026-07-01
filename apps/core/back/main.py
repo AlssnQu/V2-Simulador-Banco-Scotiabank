@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import (
@@ -11,9 +12,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
+cors_origins_env = os.getenv("CORS_ORIGINS")
+if cors_origins_env:
+    # Si hay comas, lo convierte en una lista real de Python
+    origins = [origin.strip() for origin in cors_origins_env.split(",")]
+else:
+    origins = ["http://localhost:5173"]
+
+# BLOQUE CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React Vite frontend
+    allow_origins=origins,  # <-- Usa la lista dinámica perfectamente
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,6 +40,3 @@ app.include_router(rtr_recuperaciones.router, prefix="/recuperaciones", tags=["R
 @app.get("/")
 def root():
     return {"sistema": "Core Financiero Scotiabank", "version": "1.0.0", "status": "ok"}
-
-
-

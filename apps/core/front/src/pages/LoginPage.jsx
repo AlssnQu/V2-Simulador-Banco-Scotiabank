@@ -13,7 +13,7 @@ export default function LoginPage() {
     <div className="login-wrap">
       <div className="login-card">
         <div className="login-card__franja" />
-        <h1>Banco Andino</h1>
+        <h1>Scotiabank</h1>
         <p>Core Financiero — acceso del personal</p>
         <LoginForm onSubmit={iniciarSesion} loading={loading} error={error} />
       </div>
